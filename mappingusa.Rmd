@@ -1,0 +1,144 @@
+---
+title: "MAPPING USA"
+author: "Josephus TC Nyumalin"
+date: "2022-12-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(usmap)
+library(ggplot2)
+```
+
+# MAPPAING THE US
+
+# Extending plot_usmap with ggplot2
+
+*   The nice thing about usmap::plot_usmap is it returns a ggplot object object, which        means we can add ggplot layers to the plot right out of the box.
+```{r}
+plot_usmap(regions = "counties") + 
+  labs(title = "US Counties",
+       subtitle = "This is a blank map of the counties of the United States.") + 
+  theme(panel.background = element_rect(color = "black", fill = "lightblue"))
+```
+
+# Plot only certain states
+```{r}
+plot_usmap(include = c("CA", "ID", "NV", "OR", "WA")) +
+  labs(title = "Western US States",
+       subtitle = "These are the states in the Pacific Timezone.")
+```
+
+# Add some data to the map
+```{r}
+plot_usmap(data = statepop, values = "pop_2015", color = "red") + 
+  scale_fill_continuous(name = "Population (2015)", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+Notice the comprehensive expandability that can be applied to the map using ggplot2 layers. For example, we might want to use a different color scheme.
+
+# Change fill color scale
+```{r}
+plot_usmap(data = statepop, values = "pop_2015", color = "red") + 
+  scale_fill_continuous(
+    low = "white", high = "red", name = "Population (2015)", label = scales::comma
+  ) + theme(legend.position = "right")
+```
+The data-filled map can also be filtered to show certain regions only, like the western states shown above.
+
+# Show data in certain states
+```{r}
+plot_usmap(
+    data = statepop, values = "pop_2015", include = c("CA", "ID", "NV", "OR", "WA"), color = "red"
+  ) + 
+  scale_fill_continuous(
+    low = "white", high = "red", name = "Population (2015)", label = scales::comma
+  ) + 
+  labs(title = "Western US States", subtitle = "These are the states in the Pacific Timezone.") +
+  theme(legend.position = "right")
+
+```
+
+# Required Data Format
+
+The data passed to the data parameter in plot_usmap() must be a data frame with at least two columns. One of the columns must be named "fips" or "state" and contain either the FIPS code, the state abbreviation, or the state name (for county maps only the FIPS code is supported). The second column must be the values to be plotted for each region. The default name of the values column is "values". If a different name is used in the data frame, the name can be specified in the values parameter of plot_usmap. Any extra columns in the data frame will be ignored.
+
+# FIPS column with default values column
+```{r}
+df <- data.frame(
+  fips = c("02", "01", "05", "04"),
+  values = c(14, 18, 19, 8)
+)
+
+plot_usmap(data = df)
+```
+
+# FIPS column with custom values column
+```{r}
+# Name of values column must be specified in values parameter if it is not "values".
+df <- data.frame(
+  fips = c("02", "01", "05", "04"),
+  population = c(14, 18, 19, 8)
+)
+
+plot_usmap(data = df, values = "population")
+```
+
+# States
+*   Abbreviations and full names can be mixed if desired.
+```{r}
+df <- data.frame(
+  state = c("AL", "Alaska", "AR", "AZ"),
+  values = c(14, 18, 19, 8)
+)
+
+plot_usmap(data = df)
+```
+
+# Counties
+*   County names are not supported in plot_usmap data frames. Use fips instead.
+```{r}
+df <- data.frame(
+  fips = c("10001", "10003", "10005"),
+  values = c(93, 98, 41)
+)
+
+plot_usmap(data = df)
+```
+
+# Build-in Regions
+usmap provides some built-in regions based on the US Census Bureau Regions and Divisions. These can be used in place of the include/exclude parameters when using us_map or plot_usmap and start with a . (dot):
+```{r}
+usmap::plot_usmap(include = .south_region)
+```
+
+```{r}
+usmap::plot_usmap(include = .east_south_central)
+```
+
+```{r}
+usmap::plot_usmap(include = .south_region, exclude = .east_south_central)
+```
+
+This also works with county maps. The regions can also be combined with actual state or FIPS values within the include/exclude parameters:
+```{r}
+usmap::plot_usmap("counties", 
+                  include = c(.south_region, "IA"), 
+                  exclude = c(.east_south_central, "12"))  # 12 = FL
+```
+
+You can even include or exclude individual counties (county-level inclusions/exclusions can only be done via their FIPS codes due to duplicate county names across states; for example eight different states have an “Orange County”):
+```{r}
+usmap::plot_usmap("counties", fill = "yellow", alpha = 0.25,
+                  # 06065 = Riverside County, CA
+                  include = c(.south_region, "IA", "06065"),
+                  # 12 = FL, 48141 = El Paso County, TX
+                  exclude = c(.east_south_central, "12", "48141"))
+```
+These parameters therefore allow for the possibility of some complex compositions of states and counties, to create the exact map that is desired.
+
+# Supported US Census Regions and Divisions
