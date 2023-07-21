@@ -2,3 +2,5 @@
 # Blue
 # Orange
 # Yellow
+# Green
+# Purple
