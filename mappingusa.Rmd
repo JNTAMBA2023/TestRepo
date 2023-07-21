@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(usmap)
 library(ggplot2) 
-#Sample comment
 ```
 
 # MAPPAING THE US
